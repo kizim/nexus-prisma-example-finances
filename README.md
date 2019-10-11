@@ -20,10 +20,10 @@ Start server:
 {
   users {
     name
-    balance
     accounts {
       name
-      balance
+      balance(currency: EUR)
+      currency
       transactions {
         amount
       }

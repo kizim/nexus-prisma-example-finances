@@ -448,6 +448,17 @@ apollo-cache-control@^0.8.5:
     apollo-server-env "^2.4.3"
     graphql-extensions "^0.10.4"
 
+apollo-datasource-rest@^0.6.5:
+  version "0.6.5"
+  resolved "https://registry.yarnpkg.com/apollo-datasource-rest/-/apollo-datasource-rest-0.6.5.tgz#8dbf9fd0f8300e5c30bdf6540d712defec84ee87"
+  integrity sha512-Uf4lJPydiYv3qSwfwGJ4q3HFBPRzgKwbNpdDtxfJMxvagvontv2q6aCuneaxkCFx5YXjxfKeRC52twswxvDKgA==
+  dependencies:
+    apollo-datasource "^0.6.3"
+    apollo-server-caching "^0.5.0"
+    apollo-server-env "^2.4.3"
+    apollo-server-errors "^2.3.3"
+    http-cache-semantics "^4.0.0"
+
 apollo-datasource@^0.6.3:
   version "0.6.3"
   resolved "https://registry.yarnpkg.com/apollo-datasource/-/apollo-datasource-0.6.3.tgz#b31e089e52adb92fabb536ab8501c502573ffe13"
