@@ -17,6 +17,6 @@ export class ExchangeRatesAPI extends RESTDataSource {
   async convert(amount: number, base: Currency, currency: Currency) {
     if (base === currency) return amount;
 
-    return await this.getRate(base, currency) * amount;
+    return Math.round(await this.getRate(base, currency) * amount * 100) / 100;
   }
 };
