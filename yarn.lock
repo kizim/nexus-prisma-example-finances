@@ -1619,6 +1619,13 @@ graphql-extensions@^0.10.4:
     apollo-server-env "^2.4.3"
     apollo-server-types "^0.2.5"
 
+graphql-middleware@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/graphql-middleware/-/graphql-middleware-4.0.1.tgz#8c627b22cc046a47e9474a813cf9e0bd50fa0c4b"
+  integrity sha512-r9r+pcHV4yZW7LAOcjQYTbNY6nR9SrLgpVZKbrtgXxpQW/MUc1N8q3PESciebvp5s0EEUgRchcRjUkyaArCIFw==
+  dependencies:
+    graphql-tools "^4.0.5"
+
 graphql-subscriptions@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/graphql-subscriptions/-/graphql-subscriptions-1.1.0.tgz#5f2fa4233eda44cf7570526adfcf3c16937aef11"
@@ -1631,7 +1638,7 @@ graphql-tag@^2.9.2:
   resolved "https://registry.yarnpkg.com/graphql-tag/-/graphql-tag-2.10.1.tgz#10aa41f1cd8fae5373eaf11f1f67260a3cad5e02"
   integrity sha512-jApXqWBzNXQ8jYa/HLkZJaVw9jgwNqZkywa2zfFn16Iv1Zb7ELNHkJaXHR7Quvd5SIGsy6Ny7SUKATgnu05uEg==
 
-graphql-tools@^4.0.0:
+graphql-tools@^4.0.0, graphql-tools@^4.0.5:
   version "4.0.5"
   resolved "https://registry.yarnpkg.com/graphql-tools/-/graphql-tools-4.0.5.tgz#d2b41ee0a330bfef833e5cdae7e1f0b0d86b1754"
   integrity sha512-kQCh3IZsMqquDx7zfIGWBau42xe46gmqabwYkpPlCLIjcEY1XK+auP7iGRD9/205BPyoQdY8hT96MPpgERdC9Q==
