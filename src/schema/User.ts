@@ -5,6 +5,7 @@ export const User = objectType({
   definition(t) {
     t.model.id(),
     t.model.name()
+    t.model.email()
     t.model.accounts()
     t.field('balance', {
       type: 'Float',

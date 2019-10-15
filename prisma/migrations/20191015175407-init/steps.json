@@ -70,27 +70,44 @@
     {
       "stepType": "CreateField",
       "model": "User",
-      "name": "role",
-      "type": {
-        "Enum": "UserRole"
-      },
-      "arity": "required",
-      "isUnique": false,
-      "default": {
-        "ConstantLiteral": "EMPLOYEE"
-      }
-    },
-    {
-      "stepType": "CreateField",
-      "model": "User",
       "name": "accounts",
       "type": {
         "Relation": {
           "to": "Account",
           "to_fields": [],
           "name": "AccountToUser",
-          "on_delete": "None"
+          "on_delete": "Cascade"
         }
+      },
+      "arity": "list",
+      "isUnique": false
+    },
+    {
+      "stepType": "CreateField",
+      "model": "User",
+      "name": "email",
+      "type": {
+        "Base": "String"
+      },
+      "arity": "optional",
+      "isUnique": true
+    },
+    {
+      "stepType": "CreateField",
+      "model": "User",
+      "name": "password",
+      "type": {
+        "Base": "String"
+      },
+      "arity": "optional",
+      "isUnique": false
+    },
+    {
+      "stepType": "CreateField",
+      "model": "User",
+      "name": "roles",
+      "type": {
+        "Enum": "UserRole"
       },
       "arity": "list",
       "isUnique": false
@@ -162,6 +179,19 @@
     {
       "stepType": "CreateField",
       "model": "Account",
+      "name": "balance",
+      "type": {
+        "Base": "Float"
+      },
+      "arity": "required",
+      "isUnique": false,
+      "default": {
+        "Float": 0
+      }
+    },
+    {
+      "stepType": "CreateField",
+      "model": "Account",
       "name": "user",
       "type": {
         "Relation": {
@@ -185,7 +215,7 @@
           "to": "Transaction",
           "to_fields": [],
           "name": "AccountToTransaction",
-          "on_delete": "None"
+          "on_delete": "Cascade"
         }
       },
       "arity": "list",
