@@ -8,12 +8,14 @@ generator photon {
 }
 
 model User {
-  id        Int       @id
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id        Int         @id
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
   name      String?
-  role      UserRole  @default(EMPLOYEE)
-  accounts  Account[] @relation(onDelete: CASCADE)
+  accounts  Account[]   @relation(onDelete: CASCADE)
+  email     String?     @unique
+  password  String?
+  roles     UserRole[]
 }
 
 model Account {

@@ -5,8 +5,9 @@ import * as Mutation from './Mutation';
 import * as Account from './Account';
 import * as Transaction from './Transaction';
 import * as User from './User';
+import * as Auth from './Auth';
 
-const appTypes = [Query, Mutation, Account, Transaction, User];
+const appTypes = [Query, Mutation, Account, Transaction, User, Auth];
 const nexusPrismaTypes = NexusPrisma.nexusPrismaPlugin({ types: appTypes });
 const allTypes = [appTypes, nexusPrismaTypes];
 

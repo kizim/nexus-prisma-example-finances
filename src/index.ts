@@ -7,7 +7,7 @@ import { resolversMiddleware } from './middlewares';
 
 const server = new ApolloServer({
   schema: applyMiddleware(schema, resolversMiddleware),
-  context: createContext(),
+  context: ({ req }) => createContext({ req }),
   tracing: true,
   introspection: true,
 });
