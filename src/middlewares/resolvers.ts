@@ -1,7 +1,7 @@
 import { Context } from "../context";
 import { TransactionCreateInput, Transaction, TransactionCreateArgs } from "@generated/photon";
 
-export const resolversMiddleware = {
+export const resolvers = {
   Mutation: {
     // @ts-ignore
     createTransaction: async (resolve, parent, args: TransactionCreateArgs, context: Context, info) => {
