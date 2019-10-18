@@ -1,5 +1,5 @@
-import * as Nexus from 'nexus';
-import * as NexusPrisma from 'nexus-prisma';
+import { nexusPrismaPlugin } from 'nexus-prisma';
+import { makeSchema } from 'nexus'
 import * as Query from './Query';
 import * as Mutation from './Mutation';
 import * as Account from './Account';
@@ -7,12 +7,11 @@ import * as Transaction from './Transaction';
 import * as User from './User';
 import * as Auth from './Auth';
 
-const appTypes = [Query, Mutation, Account, Transaction, User, Auth];
-const nexusPrismaTypes = NexusPrisma.nexusPrismaPlugin({ types: appTypes });
-const allTypes = [appTypes, nexusPrismaTypes];
+const types = [Query, Mutation, Account, Transaction, User, Auth];
 
-export default Nexus.makeSchema({
-  types: allTypes,
+export default makeSchema({
+  types,
+  plugins: [nexusPrismaPlugin()],
   typegenAutoConfig: {
     contextType: 'Context.Context',
     sources: [
