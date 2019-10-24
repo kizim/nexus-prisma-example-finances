@@ -6,9 +6,7 @@ import bcrypt from 'bcrypt';
 
 export const Mutation = mutationType({
   definition(t) {
-    t.crud.createOneUser(),
-    t.crud.createOneAccount(),
-    t.crud.createOneTransaction({ alias: 'createTransaction' })
+    t.crud.createOneTransaction({ alias: 'createTransaction' }),
     t.field('signUp', {
       type: 'LoginMethodResponse',
       args: {

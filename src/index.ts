@@ -3,10 +3,10 @@ import { applyMiddleware } from 'graphql-middleware'
 
 import schema from './schema';
 import { createContext } from './context';
-import { resolversMiddleware } from './middlewares';
+import * as middlewares from './middlewares';
 
 const server = new ApolloServer({
-  schema: applyMiddleware(schema, resolversMiddleware),
+  schema: applyMiddleware(schema, middlewares.permissions, middlewares.resolvers),
   context: ({ req }) => createContext({ req }),
   tracing: true,
   introspection: true,
