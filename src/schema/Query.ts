@@ -5,6 +5,7 @@ export const Query = queryType({
     t.crud.user(),
     t.crud.users(),
     t.crud.account(),
+    t.crud.transactions(),
     t.field('me', {
       type: 'User',
       nullable: true,
