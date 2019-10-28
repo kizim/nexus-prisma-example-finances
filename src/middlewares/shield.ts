@@ -31,6 +31,7 @@ export const permissions = shield({
   },
   Mutation: {
     createTransaction: isAuthenticated,
+    createAccount: isAuthenticated,
     signUp: isGuest,
     signIn: isGuest,
   },
