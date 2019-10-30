@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import request from 'request-promise';
+import _ from 'lodash';
 
+import replaceVariables from './replace-variables';
 import photon from '../photon';
 
 export default async (req: Request, res: Response) => {
@@ -13,13 +15,25 @@ export default async (req: Request, res: Response) => {
 
   const uri = `http://localhost:${process.env.ENGINE_PORT}/`;
 
+  let data = req.body;
+
+  if (!_.isEmpty(req.body.variables)) {
+    data = replaceVariables(data);
+  }
+
   let result;
   try {
     result = await request.post(uri, {
-      headers: req.headers,
-      body: JSON.stringify(req.body),
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(data),
     });
-  } catch (e) {}
+
+    console.log(result);
+  } catch (e) {
+    console.log(e);
+  }
 
   res.status(200).end(result);
 };
