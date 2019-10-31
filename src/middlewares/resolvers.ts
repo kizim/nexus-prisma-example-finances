@@ -2,10 +2,29 @@ import { Context } from "../context";
 import { TransactionCreateInput, Transaction, TransactionCreateArgs } from "@generated/photon";
 import { isArray, flattenDeep } from 'lodash';
 
+const some = (results: any[]) => {
+  const filtered = results.filter(result => result);
+  if (filtered.length) {
+    const stringErrors = filtered.filter(result => result !== true);
+    if (!stringErrors.length) return true;
+
+    return stringErrors[0];
+  }
+
+  return false;
+}
+
+const OR = (...fns: Function[]) => (...args: any) => () => ({ result: some(fns.map(fn => fn(...flattenDeep(args)))), path: flattenDeep(args)[2] });
+const AND = (...fns: Function[]) => (...args: any) => () => ({ result: fns.every(fn => fn(...flattenDeep(args))), path: flattenDeep(args)[2] });
+
+const rule = (fn: Function) => (...args: any[]) => () => fn(...flattenDeep(args))
+
 const inputTypesValidators: any = {
-  AccountWhereUniqueInput: (inputValue: any, args: any) => () => !args.context.user && inputValue.id === '10',
-  Float: (inputValue: any, args: any) => () => 'Privet',
-  String: (inputValue: any, args: any) => () => args.context.user.email
+  UserWhereUniqueInput: rule(
+    (inputValue: any, args: any, operationName: string) => {
+      console.log(inputValue);
+      return args.context.user.id === inputValue.id ? true : 'Access denied';
+    })
 }
 
 const defaultValidators = {
@@ -36,9 +55,7 @@ const transformType = (type: any, systemField = false): any => {
 
   const fields = type._fields
   if (fields) {
-    return {
-      [type.name]: Object.assign({}, ...Object.keys(fields).map(key => transformType(fields[key])))
-    }
+    return Object.assign({}, ...Object.keys(fields).map(key => transformType(fields[key])))
   }
 
   return 'Scalar';
@@ -56,35 +73,6 @@ const transformSchema = (schema: any) => {
 
   }, {})
 }
-
-const schema: any = {
-  Float: "Scalar",
-  Mutation: {
-    createTransaction: {
-      arguments: {
-        data: 'TransactionCreateInput',
-      }
-    }
-  },
-  TransactionCreateInput: {
-    amount: "Float!",
-    udpdatedAt: "DateTime!",
-    createdAt: "DateTime!",
-    account: 'AccountCreateOneWithoutAccountInput!'
-  },
-  AccountCreateOneWithoutAccountInput: {
-    create: 'AccountCreateWithoutTransactionsInput',
-    connect: 'AccountWhereUniqueInput!'
-  },
-  AccountWhereUniqueInput: { 
-    id: "String!"
-  },
-  AccountCreateWithoutTransactionsInput: {
-    name: "String!"
-  }
-}
-
-// const flatArrayToObject =  
 
 const getName = (nameField: any) => nameField.kind === 'Name' && nameField.value || nameField;
 
@@ -104,8 +92,8 @@ const extractOperationName = (operationName: string) => {
 const getValue = (valueField: any): any => {
   switch (valueField.kind) {
     case 'OperationDefinition': return { [valueField.operation.charAt(0).toUpperCase() + valueField.operation.slice(1)]: Object.assign({}, ...getValue(valueField.selectionSet)) };
-    case 'IntValue': return valueField.value
-    case 'FloatValue': return valueField.value
+    case 'IntValue': return parseInt(valueField.value)
+    case 'FloatValue': return parseFloat(valueField.value)
     case 'StringValue': return valueField.value
     case 'Field': {
       const selectionSetValue = valueField.selectionSet && Object.keys(valueField.selectionSet).length && getValue(valueField.selectionSet);
@@ -128,53 +116,75 @@ const getValue = (valueField: any): any => {
   }
 }
 
-const getValidators = (operationPart: any, schemaPart: any, validators: any[] = [], operationArgs: any): any => {
-
+const getValidators = (operationPart: any, schemaPart: any, validators: any[], operationArgs: any, operations: string[] = []): any => {
   return flattenDeep(Object.keys(operationPart).map(key => {
     const rawKey = extractOperationName(key.replace(/!/gim, ''));
     const schemaShape = schemaPart[rawKey];
     const operationShape = operationPart[key] || operationPart[rawKey];
     const shapeType = isArray(schemaShape) && 'array' || typeof schemaShape;
+    
     switch(shapeType) {
       case 'string': {
         const rawSchemaShape = schemaShape.replace(/!/gim, '')
-        const isRequired = schemaShape.indexOf('!') > 0;
         const isScalar = schemaShape === 'Scalar';
-        const schemaType = schema[rawSchemaShape];
+        const schemaType = operationArgs.schema[rawSchemaShape];
         const validator: Function | undefined = inputTypesValidators[rawSchemaShape]
-        const shapeValidators = validator && [...validators, validator(operationShape, operationArgs)] || validators;
+        const shapeValidators = validator && [...validators, validator(operationShape, operationArgs, operations)] || validators;
 
-        if (isRequired) shapeValidators.push(defaultValidators.required(operationShape, operationArgs))
-
-        return isScalar ? validators : schemaType && getValidators(operationShape, schemaType, shapeValidators, operationArgs) || shapeValidators
+        return isScalar ? validators : schemaType && validators.concat(getValidators(operationShape, schemaType, shapeValidators, operationArgs, [...operations, schemaShape])) || shapeValidators
       }
       case 'object': {
         const validator: Function | undefined = inputTypesValidators[rawKey];
         
-        const shapeValidators = validator && [...validators, validator(operationShape, operationArgs)] || validators;
+        const shapeValidators = validator && [...validators, validator(operationShape, operationArgs, operations)] || validators;
 
-        return getValidators(operationShape, schemaShape, shapeValidators, operationArgs)
+        return getValidators(operationShape, schemaShape, shapeValidators, operationArgs, [...operations, rawKey])
+      }
+      default: {
+
+        return validators;
       }
     }
   })).filter(validator => validator);
 }
 
-const validateArguments = (parent: any, args: any, context: any, info: any) => {
-  const operations = getValue(info.operation);
-  let schema = transformSchema(info.schema);
+const validateArguments = ({ parent, args, context, info }: any, throwError = false) => {
+const operations = getValue(info.operation);
+  const schema = transformSchema(info.schema);
+  // console.log(schema.UserWhereUniqueInput);
+  const validators = getValidators(operations, schema, [], { schema, parent, args, context });
+  const executedValidators = validators.map((validator: any) => validator()).filter(({ result }: any) => result !== true);
+  console.log(executedValidators);
+  if (!executedValidators.length) return true;
 
-  const validators = getValidators(operations, schema, [], { parent, args, context });
-  console.log(validators.map((validator: any) => validator()));
+  const firstError: any = executedValidators[0];
+    console.log(firstError)
+  let validationResult;
 
+  switch(typeof firstError.result) {
+    case 'boolean': validationResult = throwError && new Error(`Validation failed | at ${firstError.path.join('.')}`) || firstError;
+    case 'string': validationResult = throwError &&  new Error(`${firstError.result} | at ${firstError.path.join('.')}`) || firstError;
+  }
+  console.log(firstError.result)
+  if (throwError) throw validationResult;
+
+  return validationResult;
 }
 
 export const resolvers = {
   Mutation: {
+    createAccount: (resolve, parent, args, context, info) => {
+      console.time('val');
+      validateArguments({ parent, args, context, info }, true);
+      console.timeEnd('val');
+      const result = resolve(parent, args, context, info);
+      return result
+    },
     // @ts-ignore
     createTransaction: async (resolve, parent, args: TransactionCreateArgs, context: Context, info) => {
       const result = await resolve(parent, args, context, info);
       console.time('val');
-      validateArguments(parent, args, context, info)
+      // validateArguments(parent, args, context, info)
       console.timeEnd('val');
       // @ts-ignore
       const accountId = args.data.account.connect.id;
