@@ -4,11 +4,57 @@ import { isArray, flattenDeep } from 'lodash';
 
 const inputTypesValidators: any = {
   AccountWhereUniqueInput: (inputValue: any, args: any) => () => !args.context.user && inputValue.id === '10',
-  Float: (inputValue: any, args: any) => () => 'Privet'
+  Float: (inputValue: any, args: any) => () => 'Privet',
+  String: (inputValue: any, args: any) => () => args.context.user.email
 }
 
 const defaultValidators = {
   required: (value: any, args: any) => () => !!value
+}
+
+const systemTypes = ['Mutation', 'Query'];
+
+const transformType = (type: any, systemField = false): any => {
+  if (systemTypes.includes(type.name)) {
+    const fields = type._fields;
+    return Object.assign({}, ...Object.keys(fields).map((key) => transformType(fields[key], true)));
+  }
+
+  if (systemField) {
+
+    return {
+      [type.name]: {
+        arguments: type.args && Object.assign({}, ...type.args.map(transformType)) || {}
+      }
+    }
+  }
+
+  if (type.type) {
+
+    return { [type.name]: type.type.toString() };
+  }
+
+  const fields = type._fields
+  if (fields) {
+    return {
+      [type.name]: Object.assign({}, ...Object.keys(fields).map(key => transformType(fields[key])))
+    }
+  }
+
+  return 'Scalar';
+}
+
+const transformSchema = (schema: any) => {
+  return Object.keys(schema._typeMap).reduce((r, key) => {
+    const type = schema._typeMap[key];
+    
+    if (/^_+/gim.test(key)) {
+      return r;
+    } else {
+      return { ...r, [key]: transformType(type) };
+    }
+
+  }, {})
 }
 
 const schema: any = {
@@ -115,7 +161,8 @@ const getValidators = (operationPart: any, schemaPart: any, validators: any[] = 
 
 const validateArguments = (parent: any, args: any, context: any, info: any) => {
   const operations = getValue(info.operation);
-  console.log(operations)
+  let schema = transformSchema(info.schema);
+
   const validators = getValidators(operations, schema, [], { parent, args, context });
   console.log(validators.map((validator: any) => validator()));
 
