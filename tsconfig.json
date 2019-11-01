@@ -7,7 +7,9 @@
     "strict": true,
     "esModuleInterop": true,
     "sourceMap": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "typeRoots": ["node_modules/@types/nexus-typegen"],
+    "types": ["node_modules/@types/nexus-typegen"]
   },
   "include": ["src"]
 }
