@@ -6,7 +6,8 @@ const some = (results: any[]) => {
   const filtered = results.filter(result => result);
   if (filtered.length) {
     const stringErrors = filtered.filter(result => result !== true);
-    if (!stringErrors.length) return true;
+    const booleanResults = filtered.filter(result => result === true);
+    if (booleanResults.length) return true;
 
     return stringErrors[0];
   }
@@ -14,17 +15,44 @@ const some = (results: any[]) => {
   return false;
 }
 
-const OR = (...fns: Function[]) => (...args: any) => () => ({ result: some(fns.map(fn => fn(...flattenDeep(args)))), path: flattenDeep(args)[2] });
-const AND = (...fns: Function[]) => (...args: any) => () => ({ result: fns.every(fn => fn(...flattenDeep(args))), path: flattenDeep(args)[2] });
+const every = (results: any[]) => {
+  const filtered = results.filter(result => result);
 
-const rule = (fn: Function) => (...args: any[]) => () => fn(...flattenDeep(args))
+  if (filtered.length === results.length) {
+    const stringErrors = filtered.filter(result => result !== true);
+    if (stringErrors.length) return stringErrors[0];
+
+    return true;
+  }
+
+  return false
+}
+// const OR = (...fns: Function[]) => (...args: any) => () => {
+//   console.log(fns);
+
+//   return ({ result: some(fns.map(fn => fn(...flattenDeep(args)))), path: flattenDeep(args)[2] })
+// };
+// const AND = (...fns: Function[]) => (...args: any) => () => ({ result: fns.every(fn => fn(...flattenDeep(args))), path: flattenDeep(args)[2] });
+
+// const rule = (fn: Function) => (...args: any[]) => () => {
+
+//   return fn(...args)
+// }
+
+const AND = (...fns: Function[]) => (...args: any) => every(fns.map(fn => fn(...args)));
+const OR = (...fns: Function[]) => (...args: any) => some(fns.map(fn => fn(...args)));
+
+const rule = (fn: Function) => (...args: any[]) => () => ({ result: fn(...args), path: args[2] });
 
 const inputTypesValidators: any = {
   UserWhereUniqueInput: rule(
-    (inputValue: any, args: any, operationName: string) => {
-      console.log(inputValue);
-      return args.context.user.id === inputValue.id ? true : 'Access denied';
-    })
+    AND(
+      OR((inputValue: any, args: any, operationName: string) => { 
+        return args.context.user.id === inputValue.id ? true : 'Access denied';
+      }, OR(() => false)),
+      () => true,  
+    )
+  )
 }
 
 const defaultValidators = {
@@ -130,7 +158,7 @@ const getValidators = (operationPart: any, schemaPart: any, validators: any[], o
         const schemaType = operationArgs.schema[rawSchemaShape];
         const validator: Function | undefined = inputTypesValidators[rawSchemaShape]
         const shapeValidators = validator && [...validators, validator(operationShape, operationArgs, operations)] || validators;
-
+        console.log([...operations, schemaShape])
         return isScalar ? validators : schemaType && validators.concat(getValidators(operationShape, schemaType, shapeValidators, operationArgs, [...operations, schemaShape])) || shapeValidators
       }
       case 'object': {
@@ -153,8 +181,9 @@ const operations = getValue(info.operation);
   const schema = transformSchema(info.schema);
   // console.log(schema.UserWhereUniqueInput);
   const validators = getValidators(operations, schema, [], { schema, parent, args, context });
+  // console.log(validators.map((validator: any) => validator()))
   const executedValidators = validators.map((validator: any) => validator()).filter(({ result }: any) => result !== true);
-  console.log(executedValidators);
+  console.log(executedValidators)
   if (!executedValidators.length) return true;
 
   const firstError: any = executedValidators[0];

@@ -6,7 +6,7 @@ import { createContext } from './context';
 import * as middlewares from './middlewares';
 
 const server = new ApolloServer({
-  schema: applyMiddleware(schema, middlewares.permissions, middlewares.resolvers),
+  schema: applyMiddleware(schema, middlewares.resolvers),
   context: ({ req }) => createContext({ req }),
   tracing: true,
   introspection: true,
